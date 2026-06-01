@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes Agent — Dashboard</title>
+<style>
+/* =========================================================================
+   Hermes Agent SaaS — Dashboard Styles
+   Dark theme, mobile-responsive, vanilla CSS.
+   ========================================================================= */
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-elevated: #30363d;
+  --border: #30363d;
+  --border-muted: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #58a6ff;
+  --accent-emphasis: #1f6feb;
+  --success: #3fb950;
+  --success-subtle: #238636;
+  --danger: #f85149;
+  --danger-subtle: #da3633;
+  --warning: #d29922;
+  --warning-subtle: #9e6a03;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    Helvetica, Arial, sans-serif;
+  --font-mono: "SFMono-Regular", "Cascadia Code", "Fira Code", "JetBrains Mono",
+    Consolas, monospace;
+  --transition: 150ms ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────── */
+
+header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+header .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+header .logo .icon {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+/* ── Status bar ───────────────────────────────────────────────────────── */
+
+.status-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.status-card {
+  flex: 1;
+  min-width: 140px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+
+.status-card .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.status-card .value {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-card .value .dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.dot.on { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.dot.off { background: var(--danger); box-shadow: 0 0 6px var(--danger-subtle); }
+
+/* ── Section headers ──────────────────────────────────────────────────── */
+
+.section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-muted);
+  background: var(--bg-secondary);
+}
+
+.section-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.section-body {
+  padding: 20px;
+}
+
+.section-body.no-padding {
+  padding: 0;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: var(--font);
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--text-muted);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--success-subtle);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.btn-primary:hover {
+  background: #2ea043;
+  border-color: var(--success);
+  color: #fff;
+}
+
+.btn-danger {
+  background: var(--bg-tertiary);
+  border-color: var(--danger-subtle);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger-subtle);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn-warning {
+  background: var(--bg-tertiary);
+  border-color: var(--warning-subtle);
+  color: var(--warning);
+}
+
+.btn-warning:hover {
+  background: var(--warning-subtle);
+  border-color: var(--warning);
+  color: #fff;
+}
+
+.btn-accent {
+  background: var(--accent-emphasis);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-accent:hover {
+  background: var(--accent);
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Forms ────────────────────────────────────────────────────────────── */
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.form-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.form-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-muted);
+}
+
+/* ── Config tabs ──────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+
+.tab {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.tab:hover { color: var(--text-primary); }
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Log viewer ───────────────────────────────────────────────────────── */
+
+#log-container {
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#log-container .log-line {
+  padding: 3px 14px;
+  border-bottom: 1px solid var(--border-muted);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+#log-container .log-line .ts {
+  color: var(--text-muted);
+  margin-right: 8px;
+  user-select: none;
+}
+
+#log-container .log-line.stderr { color: var(--warning); }
+#log-container .log-line.system { color: var(--accent); }
+
+.log-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── Memory stats grid ────────────────────────────────────────────────── */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.stat-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-item .stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-item .stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Toast ────────────────────────────────────────────────────────────── */
+
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast-msg {
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: var(--font);
+  animation: slideIn 0.25s ease;
+  max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.toast-msg.success { background: var(--success-subtle); color: var(--success); border: 1px solid var(--success); }
+.toast-msg.error   { background: var(--danger-subtle); color: var(--danger); border: 1px solid var(--danger); }
+.toast-msg.info    { background: var(--accent-emphasis); color: var(--accent); border: 1px solid var(--accent); }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+
+/* ── Loading spinner ──────────────────────────────────────────────────── */
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+}
+
+.empty-state .icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  header { padding: 0 12px; height: 48px; }
+  header .logo { font-size: 14px; }
+  main { padding: 16px 10px 32px; }
+  .status-card { min-width: 120px; padding: 10px 12px; }
+  .status-card .value { font-size: 17px; }
+  .form-row { grid-template-columns: 1fr; }
+  .section-body { padding: 14px; }
+  .btn-group { flex-direction: column; }
+  .btn-group .btn { justify-content: center; }
+  .log-actions { flex-wrap: wrap; }
+  #log-container { max-height: 300px; font-size: 11px; }
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Badge ────────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 10px;
+  line-height: 18px;
+}
+
+.badge-success { background: rgba(63,185,80,0.15); color: var(--success); }
+.badge-danger  { background: rgba(248,81,73,0.15); color: var(--danger); }
+.badge-warning { background: rgba(210,153,34,0.15); color: var(--warning); }
+
+/* ── Provider/channel list ────────────────────────────────────────────── */
+
+.config-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.config-item .name {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ── Uptime display ───────────────────────────────────────────────────── */
+
+#uptime-display {
+  font-variant-numeric: tabular-nums;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<header>
+  <div class="logo">
+    <div class="icon">H</div>
+    <span>Hermes Agent</span>
+  </div>
+  <div id="header-status">
+    <span class="badge" id="gw-badge">Connecting...</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     STATUS OVERVIEW
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="status-bar">
+  <div class="status-card">
+    <div class="label">Gateway</div>
+    <div class="value" id="gw-status">
+      <span class="dot off"></span><span id="gw-status-text">Checking...</span>
+    </div>
+  </div>
+  <div class="status-card">
+    <div class="label">Uptime</div>
+    <div class="value" id="uptime-display">--:--:--</div>
+  </div>
+  <div class="status-card">
+    <div class="label">Log Lines</div>
+    <div class="value" id="log-count">0</div>
+  </div>
+  <div class="status-card">
+    <div class="label">Skills</div>
+    <div class="value" id="skills-count">0</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     GATEWAY CONTROLS
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-header">
+    <h2>Gateway Controls</h2>
+  </div>
+  <div class="section-body">
+    <div class="btn-group">
+      <button class="btn btn-primary" id="btn-start" onclick="gatewayAction('start')">
+        Start
+      </button>
+      <button class="btn btn-danger" id="btn-stop" onclick="gatewayAction('stop')">
+        Stop
+      </button>
+      <button class="btn btn-warning" id="btn-restart" onclick="gatewayAction('restart')">
+        Restart
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     CONFIGURATION MANAGEMENT
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-header">
+    <h2>Configuration</h2>
+    <button class="btn" onclick="loadConfig()">Refresh</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('providers')">LLM Providers</button>
+    <button class="tab" onclick="switchTab('channels')">IM Channels</button>
+    <button class="tab" onclick="switchTab('agent')">Default Agent</button>
+    <button class="tab" onclick="switchTab('server')">Server</button>
+  </div>
+
+  <div class="section-body">
+    <!-- Providers Tab -->
+    <div class="tab-content active" id="tab-providers">
+      <div id="provider-fields"></div>
+      <div class="form-actions">
+        <button class="btn btn-accent" onclick="saveConfig('providers')">Save Providers</button>
+        <span style="color:var(--text-muted);font-size:12px;margin-left:8px;">
+          At least one provider key is required.
+        </span>
+      </div>
+    </div>
+
+    <!-- Channels Tab -->
+    <div class="tab-content" id="tab-channels">
+      <div id="channel-fields"></div>
+      <div class="form-actions">
+        <button class="btn btn-accent" onclick="saveConfig('channels')">Save Channels</button>
+      </div>
+    </div>
+
+    <!-- Default Agent Tab -->
+    <div class="tab-content" id="tab-agent">
+      <div class="form-group">
+        <label>Agent Name</label>
+        <input type="text" id="cfg-agent-name" placeholder="e.g. Hermes Assistant">
+      </div>
+      <div class="form-group">
+        <label>Model</label>
+        <input type="text" id="cfg-agent-model" placeholder="e.g. openrouter/openai/gpt-4o">
+      </div>
+      <div class="form-group">
+        <label>System Prompt</label>
+        <input type="text" id="cfg-agent-prompt"
+               placeholder="Define the default agent's behavior and personality...">
+        <div class="form-hint">This prompt is used when a user has not created their own agent.</div>
+      </div>
+      <div class="form-group">
+        <label>Tools (comma-separated)</label>
+        <input type="text" id="cfg-agent-tools"
+               placeholder="e.g. web_search,code_interpreter,file_read">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-accent" onclick="saveConfig('agent')">Save Agent</button>
+      </div>
+    </div>
+
+    <!-- Server Tab -->
+    <div class="tab-content" id="tab-server">
+      <div class="form-group">
+        <label>Admin Password</label>
+        <input type="password" id="cfg-admin-password" placeholder="Change admin password">
+      </div>
+      <div class="form-group">
+        <label>Gateway Auto-Start</label>
+        <input type="text" id="cfg-gateway-auto-start" placeholder="true or false">
+      </div>
+      <div class="form-group">
+        <label>Log Buffer Size</label>
+        <input type="number" id="cfg-log-buffer-size" placeholder="2000">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-accent" onclick="saveConfig('server')">Save Server Config</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MEMORY & DATA
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-header">
+    <h2>Memory & Data</h2>
+    <button class="btn" onclick="loadMemory()">Refresh</button>
+  </div>
+  <div class="section-body">
+    <div class="stats-grid" id="memory-stats">
+      <div class="stat-item">
+        <div class="stat-value">--</div>
+        <div class="stat-label">Skills</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">--</div>
+        <div class="stat-label">Sessions</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">--</div>
+        <div class="stat-label">Pairings</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">--</div>
+        <div class="stat-label">Total Data</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     LOG VIEWER
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-header">
+    <h2>Gateway Logs</h2>
+    <div class="log-actions">
+      <button class="btn" id="btn-logs-refresh" onclick="loadLogs()">Refresh</button>
+      <button class="btn" id="btn-logs-clear" onclick="clearLogs()">Clear</button>
+    </div>
+  </div>
+  <div class="section-body no-padding">
+    <div id="log-container">
+      <div class="empty-state">
+        <div class="icon">--</div>
+        <div>Loading logs...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     TOAST CONTAINER
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<script>
+// =========================================================================
+// Hermes Agent Dashboard — Client Logic
+// =========================================================================
+
+const API = {
+  status:   '/api/status',
+  config:   '/api/config',
+  configBulk: '/api/config/bulk',
+  logs:     '/api/logs',
+  logsClear:'/api/logs/clear',
+  memory:   '/api/memory',
+  gateway:  (action) => `/api/gateway/${action}`,
+};
+
+let logPollTimer = null;
+let statusPollTimer = null;
+let uptimeTimer = null;
+let gatewayStartTime = null;
+let currentTab = 'providers';
+
+// ── Init ────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+  // Poll for updates every 3 seconds
+  statusPollTimer = setInterval(loadStatus, 3000);
+  logPollTimer = setInterval(loadLogs, 2000);
+  uptimeTimer = setInterval(updateUptimeDisplay, 1000);
+});
+
+// Visibility API: pause polling when tab is hidden
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (statusPollTimer) clearInterval(statusPollTimer);
+    if (logPollTimer) clearInterval(logPollTimer);
+  } else {
+    loadAll();
+    statusPollTimer = setInterval(loadStatus, 3000);
+    logPollTimer = setInterval(loadLogs, 2000);
+  }
+});
+
+// ── Load all data ───────────────────────────────────────────────────────
+
+function loadAll() {
+  loadStatus();
+  loadConfig();
+  loadLogs();
+  loadMemory();
+}
+
+// ── Status ──────────────────────────────────────────────────────────────
+
+async function loadStatus() {
+  try {
+    const res = await fetch(API.status);
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+
+    const gw = data.gateway;
+    const statusEl = document.getElementById('gw-status');
+    const badgeEl = document.getElementById('gw-badge');
+
+    if (gw.running) {
+      statusEl.innerHTML = '<span class="dot on"></span><span id="gw-status-text">Running</span>';
+      badgeEl.textContent = 'Running';
+      badgeEl.className = 'badge badge-success';
+      gatewayStartTime = gw.uptime_seconds ? (Date.now() / 1000 - gw.uptime_seconds) : null;
+      setButtons(true);
+    } else {
+      statusEl.innerHTML = '<span class="dot off"></span><span id="gw-status-text">Stopped</span>';
+      badgeEl.textContent = 'Stopped';
+      badgeEl.className = 'badge badge-danger';
+      gatewayStartTime = null;
+      setButtons(false);
+    }
+
+    document.getElementById('log-count').textContent = data.log_count ?? 0;
+
+    // Update provider/channel config counts
+    const provConfigured = Object.values(data.providers || {}).filter(p => p.configured).length;
+    document.getElementById('skills-count').textContent = provConfigured > 0 ? 'Active' : '--';
+
+  } catch (e) {
+    document.getElementById('gw-badge').textContent = 'Error';
+    document.getElementById('gw-badge').className = 'badge badge-danger';
+  }
+}
+
+function setButtons(running) {
+  document.getElementById('btn-start').disabled = running;
+  document.getElementById('btn-stop').disabled = !running;
+  document.getElementById('btn-restart').disabled = !running;
+}
+
+function updateUptimeDisplay() {
+  if (gatewayStartTime === null) {
+    document.getElementById('uptime-display').textContent = '--:--:--';
+    return;
+  }
+  const secs = Math.floor(Date.now() / 1000 - gatewayStartTime);
+  const h = String(Math.floor(secs / 3600)).padStart(2, '0');
+  const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
+  const s = String(secs % 60).padStart(2, '0');
+  document.getElementById('uptime-display').textContent = `${h}:${m}:${s}`;
+}
+
+// ── Gateway actions ─────────────────────────────────────────────────────
+
+async function gatewayAction(action) {
+  toast(`Gateway ${action} requested...`, 'info');
+  try {
+    const res = await fetch(API.gateway(action), { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      toast(`Gateway ${action} successful`, 'success');
+    } else {
+      toast(`Gateway ${action}: ${data.reason || 'failed'}`, 'error');
+    }
+    // Refresh data after a short delay for subprocess to transition
+    setTimeout(loadAll, 1500);
+  } catch (e) {
+    toast(`Gateway ${action} error: ${e.message}`, 'error');
+  }
+}
+
+// ── Config ──────────────────────────────────────────────────────────────
+
+const PROVIDER_KEYS = [
+  { key: 'OPENROUTER_API_KEY', label: 'OpenRouter API Key', hint: 'Recommended — single key for many models.' },
+  { key: 'OPENAI_API_KEY', label: 'OpenAI API Key' },
+  { key: 'ANTHROPIC_API_KEY', label: 'Anthropic API Key' },
+  { key: 'DEEPSEEK_API_KEY', label: 'DeepSeek API Key' },
+  { key: 'GOOGLE_API_KEY', label: 'Google AI API Key' },
+  { key: 'GROQ_API_KEY', label: 'Groq API Key' },
+  { key: 'XAI_API_KEY', label: 'xAI API Key' },
+  { key: 'TOGETHER_API_KEY', label: 'Together API Key' },
+  { key: 'MISTRAL_API_KEY', label: 'Mistral API Key' },
+  { key: 'COHERE_API_KEY', label: 'Cohere API Key' },
+  { key: 'PERPLEXITY_API_KEY', label: 'Perplexity API Key' },
+];
+
+const CHANNEL_KEYS = [
+  { key: 'TELEGRAM_BOT_TOKEN', label: 'Telegram Bot Token' },
+  { key: 'SLACK_BOT_TOKEN', label: 'Slack Bot Token' },
+  { key: 'SLACK_APP_TOKEN', label: 'Slack App Token' },
+  { key: 'SLACK_SIGNING_SECRET', label: 'Slack Signing Secret' },
+  { key: 'DISCORD_BOT_TOKEN', label: 'Discord Bot Token' },
+  { key: 'DISCORD_CLIENT_ID', label: 'Discord Client ID' },
+  { key: 'DISCORD_CLIENT_SECRET', label: 'Discord Client Secret' },
+  { key: 'WHATSAPP_TOKEN', label: 'WhatsApp API Token' },
+  { key: 'WHATSAPP_PHONE_NUMBER_ID', label: 'WhatsApp Phone Number ID' },
+  { key: 'WHATSAPP_BUSINESS_ACCOUNT_ID', label: 'WhatsApp Business Account ID' },
+  { key: 'MSTEAMS_CLIENT_ID', label: 'MS Teams Client ID' },
+  { key: 'MSTEAMS_CLIENT_SECRET', label: 'MS Teams Client Secret' },
+  { key: 'MSTEAMS_TENANT_ID', label: 'MS Teams Tenant ID' },
+  { key: 'GOOGLE_CHAT_PROJECT_ID', label: 'Google Chat Project ID' },
+  { key: 'MATRIX_HOMESERVER', label: 'Matrix Homeserver URL' },
+  { key: 'MATRIX_USERNAME', label: 'Matrix Username' },
+  { key: 'MATRIX_ACCESS_TOKEN', label: 'Matrix Access Token' },
+  { key: 'TWITTER_USERNAME', label: 'Twitter/X Username' },
+  { key: 'TWITTER_API_KEY', label: 'Twitter API Key' },
+  { key: 'TWITTER_API_SECRET', label: 'Twitter API Secret' },
+];
+
+async function loadConfig() {
+  try {
+    const res = await fetch(API.config);
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const cfg = data.config || {};
+
+    // Populate provider fields
+    const provDiv = document.getElementById('provider-fields');
+    provDiv.innerHTML = '';
+    let idx = 0;
+    for (const p of PROVIDER_KEYS) {
+      const val = cfg[p.key] || '';
+      const configured = val.length > 0;
+      provDiv.innerHTML += `
+        <div class="form-group">
+          <label>
+            ${p.label}
+            ${configured ? '<span class="badge badge-success" style="margin-left:6px;">Set</span>' : ''}
+          </label>
+          <input type="password" id="prov-${idx}" data-key="${p.key}"
+                 placeholder="${p.hint || 'Enter ' + p.label.toLowerCase() + '...'}">
+          ${configured ? `<div class="form-hint">Current: ${val} (hidden)</div>` : ''}
+        </div>`;
+      idx++;
+    }
+
+    // Populate channel fields
+    const chanDiv = document.getElementById('channel-fields');
+    chanDiv.innerHTML = '';
+    idx = 0;
+    for (const c of CHANNEL_KEYS) {
+      const val = cfg[c.key] || '';
+      const configured = val.length > 0;
+      chanDiv.innerHTML += `
+        <div class="form-group">
+          <label>
+            ${c.label}
+            ${configured ? '<span class="badge badge-success" style="margin-left:6px;">Set</span>' : ''}
+          </label>
+          <input type="password" id="chan-${idx}" data-key="${c.key}"
+                 placeholder="Enter ${c.label.toLowerCase()}...">
+          ${configured ? `<div class="form-hint">Current: ${val} (hidden)</div>` : ''}
+        </div>`;
+      idx++;
+    }
+
+    // Populate agent config
+    document.getElementById('cfg-agent-name').value =
+      cfg.HERMES_DEFAULT_AGENT_NAME || '';
+    document.getElementById('cfg-agent-model').value =
+      cfg.HERMES_DEFAULT_AGENT_MODEL || '';
+    document.getElementById('cfg-agent-prompt').value =
+      cfg.HERMES_DEFAULT_AGENT_SYSTEM_PROMPT || '';
+    document.getElementById('cfg-agent-tools').value =
+      cfg.HERMES_DEFAULT_AGENT_TOOLS || '';
+
+    // Populate server config
+    document.getElementById('cfg-admin-password').placeholder = '(unchanged)';
+    document.getElementById('cfg-gateway-auto-start').value =
+      cfg.GATEWAY_AUTO_START || 'true';
+    document.getElementById('cfg-log-buffer-size').value =
+      cfg.GATEWAY_LOG_BUFFER_SIZE || '2000';
+
+  } catch (e) {
+    toast('Failed to load config: ' + e.message, 'error');
+  }
+}
+
+async function saveConfig(tab) {
+  const payload = {};
+
+  if (tab === 'providers') {
+    const div = document.getElementById('provider-fields');
+    const inputs = div.querySelectorAll('input');
+    for (const inp of inputs) {
+      const val = inp.value.trim();
+      if (val) payload[inp.dataset.key] = val;
+    }
+  } else if (tab === 'channels') {
+    const div = document.getElementById('channel-fields');
+    const inputs = div.querySelectorAll('input');
+    for (const inp of inputs) {
+      const val = inp.value.trim();
+      if (val) payload[inp.dataset.key] = val;
+    }
+  } else if (tab === 'agent') {
+    const name = document.getElementById('cfg-agent-name').value.trim();
+    const model = document.getElementById('cfg-agent-model').value.trim();
+    const prompt = document.getElementById('cfg-agent-prompt').value.trim();
+    const tools = document.getElementById('cfg-agent-tools').value.trim();
+    if (name) payload.HERMES_DEFAULT_AGENT_NAME = name;
+    if (model) payload.HERMES_DEFAULT_AGENT_MODEL = model;
+    if (prompt) payload.HERMES_DEFAULT_AGENT_SYSTEM_PROMPT = prompt;
+    if (tools) payload.HERMES_DEFAULT_AGENT_TOOLS = tools;
+  } else if (tab === 'server') {
+    const pw = document.getElementById('cfg-admin-password').value.trim();
+    const auto = document.getElementById('cfg-gateway-auto-start').value.trim();
+    const buf = document.getElementById('cfg-log-buffer-size').value.trim();
+    if (pw) payload.ADMIN_PASSWORD = pw;
+    if (auto) payload.GATEWAY_AUTO_START = auto;
+    if (buf) payload.GATEWAY_LOG_BUFFER_SIZE = buf;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    toast('No values to save.', 'info');
+    return;
+  }
+
+  try {
+    const res = await fetch(API.configBulk, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const updated = data.updated || [];
+      const rejected = data.rejected || [];
+      let msg = `Saved ${updated.length} setting(s).`;
+      if (rejected.length) msg += ` ${rejected.length} rejected.`;
+      toast(msg, 'success');
+      // Clear password fields after save
+      if (tab === 'providers' || tab === 'channels') {
+        const div = document.getElementById(tab === 'providers' ? 'provider-fields' : 'channel-fields');
+        div.querySelectorAll('input').forEach(inp => { inp.value = ''; });
+      }
+      if (tab === 'server') document.getElementById('cfg-admin-password').value = '';
+      setTimeout(loadConfig, 500);
+    } else {
+      toast('Save failed: ' + (data.error || 'unknown'), 'error');
+    }
+  } catch (e) {
+    toast('Save error: ' + e.message, 'error');
+  }
+}
+
+// ── Tab switching ───────────────────────────────────────────────────────
+
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+  const tabMap = { providers: 0, channels: 1, agent: 2, server: 3 };
+  document.querySelectorAll('.tab')[tabMap[name] || 0].classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Logs ────────────────────────────────────────────────────────────────
+
+let logSinceCount = 0;
+
+async function loadLogs() {
+  try {
+    const res = await fetch(`${API.logs}?limit=300&since=${logSinceCount}`);
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const entries = data.entries || [];
+
+    const container = document.getElementById('log-container');
+    if (entries.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div>No log entries yet. Start the gateway to see output.</div></div>';
+      return;
+    }
+
+    // Only append new entries if we're tracking
+    if (logSinceCount === 0) {
+      // Full refresh
+      container.innerHTML = entries.map(e => formatLogLine(e)).join('');
+    } else {
+      // Append only
+      for (const e of entries) {
+        const div = document.createElement('div');
+        div.className = `log-line ${e.stream || ''}`;
+        div.innerHTML = formatLogLineInner(e);
+        container.appendChild(div);
+      }
+    }
+    logSinceCount = data.total || 0;
+    container.scrollTop = container.scrollHeight;
+  } catch (e) {
+    // Silently fail on polling — will retry next interval
+  }
+}
+
+function formatLogLine(e) {
+  return `<div class="log-line ${e.stream || ''}">${formatLogLineInner(e)}</div>`;
+}
+
+function formatLogLineInner(e) {
+  const ts = e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : '--:--:--';
+  return `<span class="ts">${ts}</span>${escapeHtml(e.text || '')}`;
+}
+
+async function clearLogs() {
+  try {
+    const res = await fetch(API.logsClear, { method: 'POST' });
+    if (res.ok) {
+      logSinceCount = 0;
+      document.getElementById('log-container').innerHTML =
+        '<div class="empty-state"><div>Logs cleared.</div></div>';
+      toast('Logs cleared', 'success');
+    }
+  } catch (e) {
+    toast('Clear error: ' + e.message, 'error');
+  }
+}
+
+// ── Memory ──────────────────────────────────────────────────────────────
+
+async function loadMemory() {
+  try {
+    const res = await fetch(API.memory);
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+
+    const grid = document.getElementById('memory-stats');
+    grid.innerHTML = `
+      <div class="stat-item">
+        <div class="stat-value">${data.skills?.count ?? '--'}</div>
+        <div class="stat-label">Skills</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${data.sessions?.count ?? '--'}</div>
+        <div class="stat-label">Sessions</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${data.pairings?.count ?? '--'}</div>
+        <div class="stat-label">Pairings</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">${data.total_data_mb ?? '--'} MB</div>
+        <div class="stat-label">Total Data</div>
+      </div>`;
+  } catch (e) {
+    // Silently fail on polling
+  }
+}
+
+// ── Utilities ───────────────────────────────────────────────────────────
+
+function toast(message, type) {
+  type = type || 'info';
+  const el = document.createElement('div');
+  el.className = 'toast-msg ' + type;
+  el.textContent = message;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return text.replace(/[&<>"']/g, c => map[c] || c);
+}
+</script>
+
+</body>
+</html>

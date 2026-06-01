@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+/data/
+.railway/
+*.log
+.DS_Store
+configs/

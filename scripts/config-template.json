@@ -1,0 +1,39 @@
+{
+  "_comment": "=== Hermes Agent Railway SaaS — 用戶配置範本 ===",
+  "_usage": "複製此檔案，填入你的值，然後執行：./scripts/full-deploy.sh --user-id USER_ID --config 此檔案",
+  
+  "llm": {
+    "_comment": "LLM 提供商配置 — 至少要設定一個 API Key",
+    "provider": "openrouter",
+    "api_key": "sk-or-v1-your-key-here",
+    "model": "anthropic/claude-sonnet-4.6",
+    "api_base_url": ""
+  },
+  
+  "im": {
+    "_comment": "IM 頻道配置 — 至少要設定一個平台",
+    "platform": "telegram",
+    "bot_token": "12345:ABC-DEF-GHI-JKL",
+    "allowed_users": ["@username1", "@username2"]
+  },
+  
+  "default_agent": {
+    "_comment": "默認 Agent 配置 — 用戶開通後首次使用的 Agent",
+    "name": "通用助手",
+    "system_prompt": "你是一個友善、專業的 AI 助手，由 Hermes Agent 驅動。你擅長回答問題、提供建議、協助寫作、分析數據和完成各種任務。",
+    "model": "anthropic/claude-sonnet-4.6",
+    "tools": ""
+  },
+  
+  "admin": {
+    "_comment": "Web 管理後台憑證",
+    "username": "admin",
+    "password": ""
+  },
+  
+  "gateway": {
+    "_comment": "Gateway 配置",
+    "auto_start": true,
+    "log_buffer_size": 2000
+  }
+}

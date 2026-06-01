@@ -1,0 +1,15 @@
+# Railway configuration for Hermes Agent SaaS
+# Reference: https://docs.railway.com/reference/config-as-code
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "./Dockerfile"
+
+[deploy]
+startCommand = "/app/start.sh"
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Health check is performed by Railway infrastructure
+# against the healthcheckPath every ~30 seconds

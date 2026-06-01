@@ -1,0 +1,53 @@
+# Hermes Agent Railway SaaS — Local Development Compose
+# Usage: docker compose up --build
+
+services:
+  hermes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hermes-saas
+    ports:
+      - "8080:8080"
+    volumes:
+      - hermes-data:/data
+    environment:
+      # Admin credentials (dev defaults)
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin
+      - PORT=8080
+
+      # Default agent
+      - HERMES_DEFAULT_AGENT_NAME=Hermes Assistant
+      - HERMES_DEFAULT_AGENT_SYSTEM_PROMPT=You are a helpful, concise AI assistant. Answer questions accurately and admit when you don't know something.
+      - HERMES_DEFAULT_AGENT_MODEL=openrouter/openai/gpt-4o
+
+      # LLM Provider keys (add your own for local testing)
+      # - OPENROUTER_API_KEY=sk-or-...
+      # - OPENAI_API_KEY=sk-...
+      # - ANTHROPIC_API_KEY=sk-ant-...
+      # - DEEPSEEK_API_KEY=sk-...
+      # - GOOGLE_API_KEY=...
+      # - GROQ_API_KEY=gsk_...
+      # - XAI_API_KEY=...
+      # - TOGETHER_API_KEY=...
+
+      # IM Channels (add your own for local testing)
+      # - TELEGRAM_BOT_TOKEN=...
+      # - SLACK_BOT_TOKEN=xoxb-...
+      # - SLACK_APP_TOKEN=xapp-...
+      # - DISCORD_BOT_TOKEN=...
+      # - WHATSAPP_TOKEN=...
+      # - MSTEAMS_CLIENT_ID=...
+
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  hermes-data:
+    driver: local
