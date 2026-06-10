@@ -758,7 +758,6 @@ routes = [
     Route("/api/pairings", list_pairings, methods=["GET"]),
     Route("/api/pairings", create_pairing, methods=["POST"]),
     Route("/api/pairings/{pairing_id}", delete_pairing, methods=["DELETE"]),
-    Route("/v1/chat/completions", chat_completions, methods=["POST"]),
     Route("/{path:path}", not_found, methods=["GET", "POST", "PUT", "DELETE"]),
 ]
 
@@ -858,93 +857,3 @@ if __name__ == "__main__":
         access_log=True,
         timeout_keep_alive=65,
     )
-
-
-# ============================================================================
-# Chat Proxy — /v1/chat/completions
-# ============================================================================
-# Proxies OpenAI-compatible chat requests to the configured LLM provider.
-# This allows the SaaS frontend to talk to the agent's LLM directly.
-
-import json as _json
-
-async def chat_completions(request: Request) -> JSONResponse:
-    """Proxy /v1/chat/completions to the configured LLM provider."""
-    # Auth check
-    auth_ok = _check_basic_auth(request)
-    if not auth_ok:
-        return JSONResponse({"error": "unauthorized"}, status_code=401)
-
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "invalid JSON body"}, status_code=400)
-
-    # Read LLM config
-    env = _read_env_file()
-    api_key = env.get("OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
-    base_url = env.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_BASE_URL", "")
-    model = body.get("model", "default")
-
-    if not api_key or not base_url:
-        return JSONResponse(
-            {"error": "LLM not configured. Set OPENAI_API_KEY and OPENAI_BASE_URL."},
-            status_code=503,
-        )
-
-    # Inject system prompt from default agent config
-    agent_config = _get_default_agent_config()
-    system_prompt = agent_config.get("system_prompt", "")
-    messages = body.get("messages", [])
-
-    # Use the LLM model from env if available
-    llm_model = env.get("HERMES_DEFAULT_AGENT_MODEL") or os.environ.get("HERMES_DEFAULT_AGENT_MODEL", model)
-
-    # Prepend system prompt if not already present
-    if system_prompt and (not messages or messages[0].get("role") != "system"):
-        messages = [{"role": "system", "content": system_prompt}] + messages
-
-    # Forward to LLM provider
-    import httpx
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        try:
-            resp = await client.post(
-                f"{base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": llm_model,
-                    "messages": messages,
-                    "stream": False,
-                    "max_tokens": body.get("max_tokens", 4096),
-                },
-            )
-            if resp.status_code != 200:
-                return JSONResponse(
-                    {"error": f"LLM returned {resp.status_code}", "detail": resp.text[:500]},
-                    status_code=502,
-                )
-            return JSONResponse(resp.json())
-        except Exception as e:
-            return JSONResponse({"error": str(e)}, status_code=502)
-
-
-def _check_basic_auth(request: Request) -> bool:
-    """Check Basic or Bearer auth."""
-    auth_header = request.headers.get("authorization", "")
-    if auth_header.startswith("Bearer "):
-        # Accept admin password as bearer token
-        env = _read_env_file()
-        pwd = env.get("ADMIN_PASSWORD") or os.environ.get("ADMIN_PASSWORD", "")
-        return auth_header[7:] == pwd
-    if auth_header.startswith("Basic "):
-        import base64
-        decoded = base64.b64decode(auth_header[6:]).decode()
-        env = _read_env_file()
-        pwd = env.get("ADMIN_PASSWORD") or os.environ.get("ADMIN_PASSWORD", "")
-        return decoded == f"admin:{pwd}"
-    return False
-
-
