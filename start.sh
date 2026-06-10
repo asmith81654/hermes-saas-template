@@ -91,6 +91,22 @@ for var in TELEGRAM_BOT_TOKEN SLACK_BOT_TOKEN SLACK_APP_TOKEN \
 done
 
 
+
+# ── LLM Provider Configuration ──────────────────────────────────────────────
+# Write hermes config.yaml with the LLM provider if env vars are set
+LLM_CFG="${HERMES_HOME}/config.yaml"
+if [ -n "${OPENAI_API_KEY:-}" ] && [ ! -f "${LLM_CFG}" ]; then
+    log "Writing LLM provider config to ${LLM_CFG}"
+    cat > "${LLM_CFG}" <<LLMEOF
+providers:
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "${OPENAI_BASE_URL:-https://api.openai.com/v1}"
+default_model: "${HERMES_DEFAULT_AGENT_MODEL:-MiniMax-M3}"
+LLMEOF
+    log "LLM provider configured (model: ${HERMES_DEFAULT_AGENT_MODEL:-MiniMax-M3})"
+fi
+
 # ── API Server Port Configuration ──────────────────────────────────────────
 # When API_SERVER_ENABLED=true, hermes API server handles external traffic.
 # Management dashboard moves to internal port 8081.
