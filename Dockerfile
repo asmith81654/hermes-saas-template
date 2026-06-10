@@ -42,6 +42,7 @@ COPY server.py /app/server.py
 COPY start.sh /app/start.sh
 COPY requirements.txt /app/requirements.txt
 COPY templates/ /app/templates/
+COPY skills/ /app/skills/
 
 # Install Python app dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt

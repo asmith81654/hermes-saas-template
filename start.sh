@@ -27,6 +27,17 @@ log "Creating persistent directories under ${HERMES_ROOT} ..."
 mkdir -p "${HERMES_ROOT}"/{sessions,skills,workspace,pairing,config,logs}
 log "Directories ready."
 
+# ── Install bundled skills into runtime ─────────────────────────────────────
+if [ -d "/app/skills" ]; then
+    log "Installing bundled skills from /app/skills ..."
+    cp -rn /app/skills/* "${HERMES_ROOT}/skills/" 2>/dev/null || true
+    for skill_dir in /app/skills/*/; do
+        skill_name=$(basename "$skill_dir")
+        cp -r "$skill_dir"* "${HERMES_ROOT}/skills/${skill_name}/" 2>/dev/null || true
+    done
+    log "Skills installed: $(ls ${HERMES_ROOT}/skills/ | tr '\n' ' ')"
+fi
+
 # ── Initialize default agent configuration from environment variables ────────
 # These env vars are set by Railway per-user deployment:
 #   HERMES_DEFAULT_AGENT_NAME         — display name for the default agent
