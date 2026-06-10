@@ -90,6 +90,17 @@ for var in TELEGRAM_BOT_TOKEN SLACK_BOT_TOKEN SLACK_APP_TOKEN \
     fi
 done
 
+
+# ── API Server Port Configuration ──────────────────────────────────────────
+# When API_SERVER_ENABLED=true, hermes API server handles external traffic.
+# Management dashboard moves to internal port 8081.
+if [ "${API_SERVER_ENABLED:-false}" = "true" ]; then
+    export API_SERVER_PORT="${PORT:-8080}"
+    export API_SERVER_HOST="0.0.0.0"
+    export PORT="8081"
+    log "API server on external port ${API_SERVER_PORT}, mgmt on ${PORT}"
+fi
+
 # ── Launch server ────────────────────────────────────────────────────────────
 log "=== Launching Hermes SaaS server on port ${PORT:-8080} ==="
 exec python /app/server.py
