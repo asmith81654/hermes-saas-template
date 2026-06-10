@@ -758,6 +758,8 @@ routes = [
     Route("/api/pairings", list_pairings, methods=["GET"]),
     Route("/api/pairings", create_pairing, methods=["POST"]),
     Route("/api/pairings/{pairing_id}", delete_pairing, methods=["DELETE"]),
+    Route("/v1/chat/completions", proxy_v1_chat, methods=["POST"]),
+    Route("/v1/models", proxy_v1_models, methods=["GET"]),
     Route("/{path:path}", not_found, methods=["GET", "POST", "PUT", "DELETE"]),
 ]
 
@@ -857,3 +859,71 @@ if __name__ == "__main__":
         access_log=True,
         timeout_keep_alive=65,
     )
+
+
+# ============================================================================
+# Hermes API Server Proxy — /v1/*
+# ============================================================================
+# Proxies OpenAI-compatible requests to the hermes gateway's built-in API server.
+# The API server runs on API_SERVER_PORT (default 8642) and is enabled via env vars.
+
+import httpx as _httpx
+
+HERMES_API_PORT = int(os.environ.get("API_SERVER_PORT", "8642"))
+HERMES_API_BASE = f"http://127.0.0.1:{HERMES_API_PORT}"
+
+
+async def proxy_v1_chat(request: Request) -> Response:
+    """Proxy /v1/chat/completions to the hermes API server."""
+    # Auth check — use same admin password
+    auth_header = request.headers.get("authorization", "")
+    env = _read_env_file()
+    expected_key = env.get("API_SERVER_KEY") or env.get("ADMIN_PASSWORD") or ""
+    if auth_header != f"Bearer {expected_key}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    try:
+        body = await request.body()
+        async with _httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{HERMES_API_BASE}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {expected_key}",
+                    "Content-Type": "application/json",
+                },
+                content=body,
+            )
+            return Response(
+                content=resp.content,
+                status_code=resp.status_code,
+                headers={"Content-Type": resp.headers.get("content-type", "application/json")},
+            )
+    except _httpx.ConnectError:
+        return JSONResponse(
+            {"error": "Agent API server not available. Ensure API_SERVER_ENABLED=true is set."},
+            status_code=503,
+        )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+
+
+async def proxy_v1_models(request: Request) -> Response:
+    """Proxy /v1/models to the hermes API server."""
+    try:
+        env = _read_env_file()
+        expected_key = env.get("API_SERVER_KEY") or env.get("ADMIN_PASSWORD") or ""
+        async with _httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{HERMES_API_BASE}/v1/models",
+                headers={"Authorization": f"Bearer {expected_key}"},
+            )
+            return Response(
+                content=resp.content,
+                status_code=resp.status_code,
+                headers={"Content-Type": resp.headers.get("content-type", "application/json")},
+            )
+    except _httpx.ConnectError:
+        return JSONResponse({"object": "list", "data": [{"id": "hermes-agent", "object": "model", "owned_by": "hermes"}]})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+
