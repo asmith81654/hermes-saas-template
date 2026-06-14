@@ -36,8 +36,10 @@ from typing import Any, Optional
 from jinja2 import Environment, FileSystemLoader
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, JSONResponse, Response
+from starlette.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
+
+from openai import AsyncOpenAI
 
 # ============================================================================
 # Constants
@@ -738,6 +740,120 @@ async def not_found(request: Request) -> JSONResponse:
 
 
 # ============================================================================
+# OpenAI-Compatible API (/v1)
+# ============================================================================
+
+_openai_client: Optional[AsyncOpenAI] = None
+
+
+def _get_openai_client() -> AsyncOpenAI:
+    """Lazy-init OpenAI client from env vars (OPENAI_API_KEY + OPENAI_BASE_URL)."""
+    global _openai_client
+    if _openai_client is None:
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        base_url = os.environ.get("OPENAI_BASE_URL", "")
+        if api_key:
+            _openai_client = AsyncOpenAI(api_key=api_key, base_url=base_url or None)
+        else:
+            # No API key configured — client will fail on use, but init doesn't crash
+            _openai_client = AsyncOpenAI(
+                api_key="sk-placeholder", base_url=base_url or None
+            )
+    return _openai_client
+
+
+async def list_models(request: Request) -> JSONResponse:
+    """OpenAI-compatible GET /v1/models."""
+    if not require_auth(request):
+        return Response(
+            status_code=401,
+            headers={"WWW-Authenticate": 'Basic realm="Hermes"'},
+        )
+    model_name = os.environ.get("HERMES_DEFAULT_AGENT_MODEL", "hermes-agent")
+    return JSONResponse({
+        "object": "list",
+        "data": [{
+            "id": model_name,
+            "object": "model",
+            "created": 1700000000,
+            "owned_by": "hermes",
+        }],
+    })
+
+
+async def chat_completions(request: Request) -> Response:
+    """OpenAI-compatible POST /v1/chat/completions (streaming + non-streaming).
+
+    Proxies requests to the configured LLM provider using OPENAI_API_KEY
+    and OPENAI_BASE_URL from environment variables.
+    """
+    if not require_auth(request):
+        return Response(
+            status_code=401,
+            headers={"WWW-Authenticate": 'Basic realm="Hermes"'},
+        )
+
+    try:
+        body = await request.json()
+    except json.JSONDecodeError:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    messages = body.get("messages", [])
+    model = body.get(
+        "model", os.environ.get("HERMES_DEFAULT_AGENT_MODEL", "hermes-agent")
+    )
+    stream = body.get("stream", False)
+    max_tokens = body.get("max_tokens", body.get("max_completion_tokens", None))
+    temperature = body.get("temperature", None)
+
+    client = _get_openai_client()
+
+    if stream:
+        async def event_stream():
+            try:
+                stream_resp = await client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    stream=True,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                async for chunk in stream_resp:
+                    yield f"data: {chunk.model_dump_json()}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception as exc:
+                error_chunk = json.dumps({
+                    "error": {"message": str(exc), "type": "api_error"}
+                })
+                yield f"data: {error_chunk}\n\n"
+                yield "data: [DONE]\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+    else:
+        try:
+            completion = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            return JSONResponse(completion.model_dump())
+        except Exception as exc:
+            return JSONResponse(
+                {"error": {"message": str(exc), "type": "api_error"}},
+                status_code=500,
+            )
+
+
+# ============================================================================
 # App Factory
 # ============================================================================
 
@@ -758,6 +874,8 @@ routes = [
     Route("/api/pairings", list_pairings, methods=["GET"]),
     Route("/api/pairings", create_pairing, methods=["POST"]),
     Route("/api/pairings/{pairing_id}", delete_pairing, methods=["DELETE"]),
+    Route("/v1/models", list_models, methods=["GET"]),
+    Route("/v1/chat/completions", chat_completions, methods=["POST"]),
     Route("/{path:path}", not_found, methods=["GET", "POST", "PUT", "DELETE"]),
 ]
 
